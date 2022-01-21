@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.github.johnbanq.wiresquid.Wiresquid;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NBTOutputStream;
 import com.nukkitx.nbt.NbtMap;
@@ -58,6 +59,8 @@ public class ProxyPass {
         }
         MINECRAFT_VERSION = minecraftVersion;
     }
+
+    private Wiresquid wiresquid;
 
     private final AtomicBoolean running = new AtomicBoolean(true);
     private BedrockServer bedrockServer;
@@ -115,6 +118,9 @@ public class ProxyPass {
         this.bedrockServer.bind().join();
         log.info("RakNet server started on {}", proxyAddress);
 
+        log.info("starting wiresquid");
+        wiresquid = new Wiresquid(this::shutdown);
+        wiresquid.start();
         loop();
     }
 
@@ -144,6 +150,7 @@ public class ProxyPass {
     }
 
     public void shutdown() {
+        wiresquid.stop();
         if (running.compareAndSet(true, false)) {
             synchronized (this) {
                 this.notify();
